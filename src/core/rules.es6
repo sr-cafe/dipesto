@@ -34,6 +34,10 @@ export let COMMENTS = [
 				pattern: {
 					start: /^##/,
 					end: /##$/
+				},
+				marker: {
+					start: '##',
+					end: '##'
 				}
 			}
 		],

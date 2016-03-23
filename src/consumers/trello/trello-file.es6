@@ -61,11 +61,8 @@ export default class TrelloFile{
 			original.splice(startIndex, endIndex, newContent.join('\n'));
 		});
 
-		console.log(original);
-
 		let filepath = path.join(this.file.folder, this.file.name);
 
-		fs.renameSync(filepath, filepath+'.bak');
 		fs.writeFileSync(filepath, original.join('\n'), {encoding: 'utf8'});
 
 		return this;

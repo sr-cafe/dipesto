@@ -12,10 +12,6 @@ let commentsMapper = function(line, index, array){
 	return this.matcher.getComment(line, index, array);
 };
 
-// let notNullFilter = function(item){
-// 	return item !== null;
-// };
-
 export default class File{
 	constructor(content, name, folder){
 		this.content = content;

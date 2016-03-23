@@ -1,9 +1,16 @@
+/*
+NOTE: This is a test
+TR_ID: 56f2859b245d2588a29740c5
+TR_STATUS: To Do
+*/
+
 import path from 'path';
 import R from 'ramda';
 import Promise from 'bluebird';
 import Trello from 'node-trello';
 
 import TrelloFile from './trello-file';
+import TrelloInbox from './trello-inbox';
 import * as ENDPOINTS from './endpoints';
 
 let mapInputFilesToTrelloFiles = function(files){
@@ -59,88 +66,66 @@ let getTrelloBoardLists = R.curry(function(trello, board){
 });
 
 let processFilesWithLists = R.curry(function(files, lists){
-	return files.map(function(file){
-		return file.process(lists);
-	});
+	return{
+		files: files.map(function(file){
+			return file.process(lists);
+		}),
+		lists: lists
+	}
 });
 
-let postFilesToTrello = R.curry(function(trello, files){
-	return Promise.map(files, function(file){
+let postFilesToTrello = R.curry(function(trello, filesAndLists){
+	return Promise.map(filesAndLists.files, function(file){
 		return file.post(trello);
 	})
 });
 
+let processInboxWithFilepath = R.curry(function(filepath, filesAndLists){
+	let inbox = new TrelloInbox(filepath);
+	return inbox.process(filesAndLists.files, filesAndLists.lists);
+});
+
 export default class DipestoConsumer{
-	constructor(key, token, boardName){
+	constructor(key, token, boardName, inboxPath){
 		this.trello = new Trello(key, token);
 		this.boardName = boardName;
+		this.inboxPath = inboxPath || './inbox.trello';
 	}
 
 	run(_input){
 		let input = JSON.parse(_input),
 			files = mapInputFilesToTrelloFiles(input.files);
 
-		let getBoard = getTrelloBoard(this.trello),
-			getBoardLists = getTrelloBoardLists(this.trello),
-			processFiles = processFilesWithLists(files),
-			postFiles = postFilesToTrello(this.trello);
+		let getBoard = getTrelloBoard(this.trello), // () -> Lists
+			getBoardLists = getTrelloBoardLists(this.trello), // (Lists) -> Lists
+			processFiles = processFilesWithLists(files), // (Lists) -> Files
+			postFiles = postFilesToTrello(this.trello),
+			processInbox = processInboxWithFilepath(this.inboxPath);
 
 		return R.pipeP(
 			getBoard,
 			getBoardLists,
 			processFiles,
-			postFiles,
-			function(files){
-				files.map(function(file){
+			function(filesAndLists){
+				return Promise.all([
+					postFiles(filesAndLists),
+					processInbox(filesAndLists)
+				]).then(function(results){
+					return{
+						files: results[0],
+						lists: results[1]
+					}
+				})
+			},
+			function(filesAndLists){
+				return filesAndLists.files.map(function(file){
 					file.writeToDisk();
 				})
+			},
+			function(){
+				console.log('ALL DONE');
 			}
 		)(this.boardName);
 
 	}
 }
-
-
-// import Board from './board';
-// import TrelloAnnotation from './trello-annotation';
-//
-// let filesToTrelloAnnotations = function(files){
-// 	return files.reduce(function(previous, current){
-// 		let filepath = path.join(current.folder, current.name),
-// 			annotationMapper = annotationToTrelloAnnotation(filepath)
-// 		return previous.concat(current.annotations.map(annotationMapper));
-// 	}, [])
-// };
-//
-// let annotationToTrelloAnnotation = R.curry(function(filepath, annotation){
-// 	return new TrelloAnnotation(annotation, filepath);
-// });
-//
-// let listAnnotationsGrab = R.curry(function(annotations, lists){
-// 	return lists.map(function(list){
-// 		return list.grabAnnotations(annotations);
-// 	})
-// });
-//
-// export default class DipestoTrelloConsumer{
-// 	constructor(key, token, boardName){
-// 		this.trello = new Trello(key, token);
-// 		this.boardName = boardName;
-// 	}
-//
-// 	run(_input){
-// 		let input = JSON.parse(_input),
-// 			annotations = filesToTrelloAnnotations(input.files).slice(0, 1);
-//
-// 		let board = new Board(this.trello);
-// 		return board.getByName(this.boardName)
-// 			.then(board.getLists.bind(board))
-// 			.then(listAnnotationsGrab(annotations))
-// 			.then(function(lists){
-// 				return lists.map(function(list){
-// 					list.update();
-// 				})
-// 			})
-// 	}
-//
-// }

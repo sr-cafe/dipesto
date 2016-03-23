@@ -10,12 +10,11 @@ var key = credentials.key,
 
 var TrelloConsumer = require('../lib/consumers/trello/index').default;
 
-var input = fs.readFileSync('./todo.txt', {encoding: 'utf8'});
-
-var boardName = 'Topisto';
+var boardName = 'Topisto',
+    inboxPath = './inbox.trello';
 
 var processInput = function(error, input){
-	var result = new TrelloConsumer(key, token, boardName)
+	var result = new TrelloConsumer(key, token, boardName, inboxPath)
         .run(input)
         .then(function(result){
     		console.log('Trello update done')
@@ -41,7 +40,7 @@ readInput(processInput);
 // // var boardName = 'Dipesto';
 // var boardName = 'Topisto';
 //
-//
+// var input = fs.readFileSync('./todo.txt', {encoding: 'utf8'});
 // var res = new TrelloConsumer(key, token, boardName)
 // 	.run(input)
 // 	.then(function(result){
