@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../src/consumers/trello/trello-list.es6"],"names":[],"mappings":";;;;;;;;IAAqB,aACpB,SADoB,UACpB,CAAY,IAAZ,EAAiB;uBADG,YACH;;AAChB,MAAK,IAAL,GAAY,IAAZ,CADgB;CAAjB;;kBADoB","file":"trello-list.js","sourcesContent":["export default class TrelloList{\n\tconstructor(list){\n\t\tthis.list = list;\n\t}\n}\n"]}

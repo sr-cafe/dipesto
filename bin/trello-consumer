@@ -1,0 +1,49 @@
+#!/usr/bin/env node
+
+"use strict";
+
+var fs = require('fs'),
+    credentials = require('../.credentials')
+
+var key = credentials.key,
+    token = credentials.token;
+
+var TrelloConsumer = require('../lib/consumers/trello/index').default;
+
+var input = fs.readFileSync('./todo.txt', {encoding: 'utf8'});
+
+var boardName = 'Topisto';
+
+var processInput = function(error, input){
+	var result = new TrelloConsumer(key, token, boardName)
+        .run(input)
+        .then(function(result){
+    		console.log('Trello update done')
+    	});
+}
+
+var readInput = function(cb){
+	var chunks = [];
+	process.stdin.pipe(process.stdout);
+
+	process.stdin
+		.on('data', function (chunk) {
+			chunks.push(chunk);
+		})
+		.on('end', function () {
+			cb(null, chunks.join(""));
+		});
+}
+
+readInput(processInput);
+
+
+// // var boardName = 'Dipesto';
+// var boardName = 'Topisto';
+//
+//
+// var res = new TrelloConsumer(key, token, boardName)
+// 	.run(input)
+// 	.then(function(result){
+// 		console.log('Trello update done')
+// 	});

@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+
+"use strict";
+
+var Dipesto = require('../lib/core/index').default;
+var res = new Dipesto().run()
+	.then(function(result){
+		process.stdout.write(result.output());
+	});
